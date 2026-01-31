@@ -25,9 +25,10 @@ public interface ShowSeatRepository extends JpaRepository<ShowSeat, Integer> {
     @Query(value = "Select * from show_seats where show_id = ?1 and is_available = false", nativeQuery = true)
     public List<ShowSeat> findBookedSeatsByShowId(int showId);
 
-    @Query(value = "SELECT seat_type, price from show_seats where show_id=?1 AND seat_type='PREMIUM' UNION SELECT seat_type, price from show_seats where show_id=?1 AND seat_type='CLASSICPLUS' UNION SELECT seat_type, price from show_seats where show_id=?1 AND seat_type='CLASSIC'", nativeQuery = true)
-    public List<SeatPrice> getSeatsPrices(Integer showId);
-    
+    @Query(value = "SELECT seat_type, price FROM show_seats WHERE show_id=?1 AND seat_type IN ('PREMIUM','CLASSICPLUS','CLASSIC')", nativeQuery = true)
+    List<SeatPrice> getSeatsPrices(Integer showId);
+
+
     Optional<ShowSeat> findById(int id);
 
 }

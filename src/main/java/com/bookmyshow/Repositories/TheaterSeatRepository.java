@@ -11,6 +11,7 @@ import com.bookmyshow.Models.TheaterSeat;
 @Repository
 public interface TheaterSeatRepository extends JpaRepository<TheaterSeat, Integer> {
 
-    @Query(value = "Select * from Theater_seats where theater_id = ?1", nativeQuery = true)
+    @Query(value = "SELECT * FROM theater_seats WHERE theater_id = ?1", nativeQuery = true)
     public List<TheaterSeat> findAllByTheaterId(Integer id);
+
 }
