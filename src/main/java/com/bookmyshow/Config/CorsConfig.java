@@ -17,7 +17,8 @@ public class CorsConfig {
 
         config.setAllowedOrigins(List.of(
                 "http://localhost:5173",        // Vite frontend
-                "http://localhost:3000"         // Optional React
+                "http://localhost:3000",
+                "https://bookmyshowfrontend-ten.vercel.app/"// Optional React
         ));
 
         config.setAllowedMethods(List.of(
