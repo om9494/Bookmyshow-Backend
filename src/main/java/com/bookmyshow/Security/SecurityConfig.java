@@ -30,49 +30,62 @@ public class SecurityConfig {
     private JwtAuthFilter jwtAuthFilter;
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+
         http
                 .csrf(csrf -> csrf.disable())
-                .cors(cors -> cors.and()) // Enables CORS based on your CorsConfig.java
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .cors(cors -> {})   // Uses CorsConfig bean
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
                 .authorizeHttpRequests(auth -> auth
-                        // Public endpoints for login, registration, and Browse movies
-                        .requestMatchers("/signup/register", "/signup/login", "/forgetpassword/**").permitAll()
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Allow pre-flight requests
-                        .requestMatchers("/movies/all", "/movies/id/**", "/movies/search").permitAll()
 
-                        // Authenticated user endpoints
-                        .requestMatchers("/signup/profile").authenticated()
-                        .requestMatchers("/theaters/getAllTheaters", "/theaters/getTheaterById/**", "/theaters/getTheaterByCity/**").hasAnyRole("USER", "ADMIN")
-                        .requestMatchers("/theater-seats/getSeatsByTheater/**").hasAnyRole("USER", "ADMIN")
-                        .requestMatchers("/mysql/query").hasAnyRole("USER", "ADMIN")
-                        .requestMatchers("/movies/totalCollection/**").hasAnyRole("USER", "ADMIN")
-                        .requestMatchers("/shows/getAllShows", "/shows/getShowById/**").hasAnyRole("USER", "ADMIN")
-                        .requestMatchers("/shows/showTimingsOnDate", "/shows/theaterAndShowTimingsByMovie", "/shows/movieHavingMostShows").hasAnyRole("USER", "ADMIN")
-                        .requestMatchers("/seats/**").hasAnyRole("USER", "ADMIN")
-                        .requestMatchers("/bookings/**", "/ticket/**").hasAnyRole("USER", "ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/reviews/movie/**").permitAll() // Anyone can view reviews
-                        .requestMatchers("/reviews/**").authenticated()
-                        .requestMatchers("/seats/lockSeat", "/seats/unlockSeat").hasAnyRole("USER", "ADMIN")
-                        .requestMatchers("/api/payment/**").hasAnyRole("USER", "ADMIN")
+                        // ✅ ALWAYS allow preflight
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                        // --- NEW RULE FOR VIEWING FOOD (USER & ADMIN) ---
-                        .requestMatchers("/show-food/show/**").hasAnyRole("USER", "ADMIN")
+                        // ✅ Public APIs
+                        .requestMatchers(
+                                "/signup/register",
+                                "/signup/login",
+                                "/forgetpassword/**",
+                                "/movies/all",
+                                "/movies/id/**",
+                                "/movies/search",
+                                "/reviews/movie/**"
+                        ).permitAll()
 
-                        // Admin-only endpoints
-                        .requestMatchers("/movies/add", "/movies/*/").hasRole("ADMIN")
-                        .requestMatchers("/shows/addShow", "/shows/updateShow/**", "/shows/deleteShow/**").hasRole("ADMIN")
-                        .requestMatchers("/shows/associateShowSeats").hasRole("ADMIN")
-                        .requestMatchers("/theaters/addTheater", "/theaters/updateTheater/**", "/theaters/deleteTheater/**").hasRole("ADMIN")
-                        .requestMatchers("/theater-seats/addTheaterSeat", "/theater-seats/updateTheaterSeat/**", "/theater-seats/deleteTheaterSeat/**").hasRole("ADMIN")
-                        
-                        // --- NEW RULES FOR MANAGING FOOD (ADMIN ONLY) ---
-                        .requestMatchers("/show-food/add", "/show-food/update/**", "/show-food/delete/**").hasRole("ADMIN")
-                        
-                        // Any other request must be authenticated
+                        // ✅ USER + ADMIN
+                        .requestMatchers(
+                                "/signup/profile",
+                                "/theaters/**",
+                                "/theater-seats/**",
+                                "/shows/**",
+                                "/seats/**",
+                                "/bookings/**",
+                                "/ticket/**",
+                                "/reviews/**",
+                                "/api/payment/**",
+                                "/show-food/show/**"
+                        ).hasAnyRole("USER", "ADMIN")
+
+                        // ✅ ADMIN only
+                        .requestMatchers(
+                                "/movies/add",
+                                "/movies/update/**",
+                                "/movies/delete/**",
+                                "/shows/addShow",
+                                "/shows/updateShow/**",
+                                "/shows/deleteShow/**",
+                                "/theaters/addTheater",
+                                "/theaters/updateTheater/**",
+                                "/theaters/deleteTheater/**",
+                                "/show-food/add",
+                                "/show-food/update/**",
+                                "/show-food/delete/**"
+                        ).hasRole("ADMIN")
+
                         .anyRequest().authenticated()
                 )
-                .httpBasic(httpBasic -> {})
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
@@ -81,8 +94,8 @@ public class SecurityConfig {
     @Bean
     public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-        provider.setPasswordEncoder(passwordConfig.passwordEncoder());
         provider.setUserDetailsService(customUserDetailsService);
+        provider.setPasswordEncoder(passwordConfig.passwordEncoder());
         return provider;
     }
 
